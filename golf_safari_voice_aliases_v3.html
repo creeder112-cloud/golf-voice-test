@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Golf Chips & Skins — Round Test</title>
+<style>body{font:16px Arial,sans-serif;background:#f4f6f2;color:#182018;margin:0}header{background:#173b25;color:white;padding:18px}main{max-width:700px;margin:auto;padding:16px}.card{background:white;border-radius:14px;padding:18px;margin-bottom:14px}label{display:block;margin:12px 0 5px;font-weight:bold}input,select,textarea,button{font:inherit;box-sizing:border-box;max-width:100%}input,select,textarea{padding:9px;width:100%}button{padding:11px;margin:6px 6px 6px 0;border:0;border-radius:9px;background:#206b3d;color:white}button.secondary{background:#59645d}button:disabled{opacity:.45}.voicebox{border:2px solid #c5dfcb;border-radius:12px;padding:12px;margin:14px 0;background:#f4faf5}.voicebox p{overflow-wrap:anywhere}.muted{color:#58645c}.chiprow{display:flex;gap:8px;align-items:center;margin:7px 0}.chiprow select{flex:1;min-width:0}.chiprow span{flex:1}.small{font-size:14px}.hidden{display:none}hr{border:0;border-top:1px solid #ddd;margin:18px 0}</style></head>
+<body><header><h2>Golf Chips & Skins</h2><div>Safari round-screen test · saved on this device only</div></header><main>
+<section class="card" id="welcome"><h2>Golf Chips & Skins</h2><button id="create">Create Game</button></section>
+<section class="card hidden" id="setup"><h2>New Game</h2><label for="players">Players (one per line)</label><textarea id="players" rows="4">Chris
+Mike
+Dave</textarea><label for="roundDate">Round date</label><input id="roundDate" type="date"><label for="nine">Which nine?</label><select id="nine"><option value="front">Front Nine (1–9)</option><option value="back">Back Nine (10–18)</option></select><label for="skinValue">Skin value</label><select id="skinValue"><option value="0.25">$0.25</option><option value="0.50">$0.50</option><option value="0.10">$0.10</option><option value="1.00">$1.00</option></select><label for="carryover">Skin carryover</label><select id="carryover"><option value="on">On</option><option value="off">Off</option></select><label for="emails">Player emails (optional; one per line)</label><textarea id="emails" rows="3"></textarea><p class="muted small">This standalone test does not email players or connect to the existing online game.</p><button id="start">Start Round</button></section>
+<section class="card hidden" id="round"><h2 id="roundTitle"></h2><p id="roundInfo"></p><label for="skinWinner">Skin winner for this hole</label><select id="skinWinner"></select><p class="muted small">Choose “Tie / no winner” if the hole is tied.</p><h3>Current Round Summary</h3><div id="roundTotals"></div><div class="voicebox"><h3>🎤 Voice chip entry</h3><p class="small">Say “Chris gets Birdie and Par. Dave gets Water and 3 Putt.” Review all selected chips, then tap Finish Hole to save them.</p><button type="button" id="voiceButton">Start talking</button><p id="voiceStatus" role="status">Ready.</p><p class="small">Heard: <span id="voiceHeard">Nothing yet.</span></p></div><h3>Good chips</h3><div id="goodRows"></div><h3>Bad chips</h3><div id="badRows"></div><button id="finishHole">Finish Hole</button><button class="secondary" id="endGame">End game / start over</button></section>
+<section class="card hidden" id="summary"><h2 id="summaryTitle"></h2><div id="summaryBody"></div><h3>Current Round Summary</h3><div id="holeTotals"></div><button id="nextHole">Next Hole</button><button class="secondary" id="summaryEnd">End game / start over</button></section>
+<section class="card hidden" id="final"><h2>Final Settlement</h2><div id="finalBody"></div><button id="newGame">Start New Game</button></section>
+</main><script>
+'use strict';
+const GOOD=['Par','Closest to the Pin','GIR','No Mully','Fringe Putt','Albatross','Eagle','Long Drive','Sandy','Chip In','Double GIR','1 Putt','3 Birdies in a Row','Hole in One','Hole Out','Net Winner','Long Putt','Birdie','3 Pars in a Row'];
+const BAD=['3 Putt','Water','Double Water','Tree','Sand','Double Sand','4 Putt','Lost Ball','Out of Bounds','Beer','Plus 4','Plus 5','Plus 6','Plus 3','Lady','Double Lady','5 Putt','6 Putt'];
+const $=id=>document.getElementById(id);let game=null;
+function show(id){['welcome','setup','round','summary','final'].forEach(x=>$(x).classList.toggle('hidden',x!==id));}
+function option(value,label){const o=document.createElement('option');o.value=value;o.textContent=label;return o;}
+function todayLocal(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+$('create').onclick=()=>{$('roundDate').value||=todayLocal();show('setup');};
+$('start').onclick=()=>{const players=$('players').value.split(/\n|,/).map(s=>s.trim()).filter(Boolean);if(players.length<2){alert('Please enter at least two players.');return;}if(new Set(players.map(s=>s.toLowerCase())).size!==players.length){alert('Each player must have a different name.');return;}if(!$('roundDate').value){alert('Please select a date.');return;}const emails=$('emails').value.split(/\n|,/).map(s=>s.trim());if(emails.some(e=>e&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))){alert('Please check the email addresses or leave them blank.');return;}game={players,date:$('roundDate').value,nine:$('nine').value,skinValue:Number($('skinValue').value),carry:$('carryover').value==='on',records:[],good:{},bad:{},skins:{},pending:0};GOOD.forEach(c=>game.good[c]=null);BAD.forEach(c=>game.bad[c]=null);players.forEach(p=>game.skins[p]=0);renderHole();};
+function chipRows(container,chips,kind){container.replaceChildren();chips.forEach(chip=>{const row=document.createElement('div');row.className='chiprow';const label=document.createElement('span');label.textContent=chip;const sel=document.createElement('select');sel.dataset.chip=chip;sel.dataset.kind=kind;sel.append(option('','No change'));game.players.forEach(p=>sel.append(option(p,p)));row.append(label,sel);container.append(row);});}
+function renderTotals(target){const counts={};game.players.forEach(p=>counts[p]={good:0,bad:0,skins:game.skins[p]});Object.values(game.good).forEach(p=>{if(p)counts[p].good++;});Object.values(game.bad).forEach(p=>{if(p)counts[p].bad++;});const table=document.createElement("table");table.style.cssText="width:100%;border-collapse:collapse;text-align:left";const head=document.createElement("tr");["Player","Good chips","Bad chips","Skins"].forEach(t=>{const th=document.createElement("th");th.textContent=t;th.style.cssText="padding:8px 4px;border-bottom:2px solid #ccc";head.append(th);});table.append(head);game.players.forEach(p=>{const tr=document.createElement("tr");[p,counts[p].good,counts[p].bad,counts[p].skins].forEach(v=>{const td=document.createElement("td");td.textContent=v;td.style.cssText="padding:8px 4px;border-bottom:1px solid #ddd";tr.append(td);});table.append(tr);});$(target).replaceChildren(table);}
+function renderHole(){const hole=(game.nine==='front'?1:10)+game.records.length;$('roundTitle').textContent='Hole '+hole;$('roundInfo').textContent=game.date+' · '+(game.nine==='front'?'Front Nine':'Back Nine')+' · Skin carryover: '+(game.carry?'ON':'OFF')+' · '+game.records.length+' holes completed';$('skinWinner').replaceChildren(option('','Tie / no winner'));game.players.forEach(p=>$('skinWinner').append(option(p,p)));chipRows($('goodRows'),GOOD,'good');chipRows($('badRows'),BAD,'bad');renderTotals('roundTotals');$('voiceHeard').textContent='Nothing yet.';$('voiceStatus').textContent='Ready.';show('round');}
+$('finishHole').onclick=()=>{const hole=(game.nine==='front'?1:10)+game.records.length;const winner=$('skinWinner').value;const changedGood=[],changedBad=[];document.querySelectorAll('[data-chip]').forEach(sel=>{if(!sel.value)return;const chip=sel.dataset.chip;const owners=sel.dataset.kind==='good'?game.good:game.bad;const previous=owners[chip];owners[chip]=sel.value;(sel.dataset.kind==='good'?changedGood:changedBad).push(chip+': '+(previous&&previous!==sel.value?previous+' → ':'')+sel.value);});let skinsWon=0;if(winner){skinsWon=game.pending+1;game.skins[winner]+=skinsWon;game.pending=0;}else if(game.carry){game.pending++;}const rec={hole,winner,skinsWon,changedGood,changedBad};game.records.push(rec);$('summaryTitle').textContent='Hole '+hole+' Summary · Carryover '+(game.carry?'ON':'OFF');const body=$('summaryBody');body.replaceChildren();const p=document.createElement('p');p.textContent=winner?winner+' won '+skinsWon+' skin(s).':game.carry?'Tie — '+game.pending+' skin(s) carry forward.':'Tie — no skin awarded.';body.append(p);[['Good chips',changedGood],['Bad chips',changedBad]].forEach(([label,items])=>{const h=document.createElement('h3');h.textContent=label;body.append(h);const el=document.createElement('p');el.textContent=items.join('; ')||'No changes';body.append(el);});renderTotals('holeTotals');$('nextHole').textContent=game.records.length===9?'See Final Settlement':'Next Hole';show('summary');};
+$('nextHole').onclick=()=>game.records.length===9?renderFinal():renderHole();
+function money(n){return '$'+n.toFixed(2);}
+function addLine(parent,text){const p=document.createElement('p');p.textContent=text;parent.append(p);}
+function renderFinal(){const body=$('finalBody');body.replaceChildren();addLine(body,game.date+' · '+(game.nine==='front'?'Front Nine':'Back Nine'));const goodCount={},badCount={};game.players.forEach(p=>{goodCount[p]=0;badCount[p]=0;});Object.values(game.good).forEach(p=>{if(p)goodCount[p]++;});Object.values(game.bad).forEach(p=>{if(p)badCount[p]++;});game.players.forEach(p=>addLine(body,p+': '+goodCount[p]+' good chips, '+badCount[p]+' bad chips, '+game.skins[p]+' skins'));addLine(body,'Community pot: '+money(Object.values(badCount).reduce((a,b)=>a+b,0))+' (each bad chip counts as $1.00).');if(game.pending)addLine(body,game.pending+' carried skin(s) remained unawarded.');const h=document.createElement('h3');h.textContent='Pairwise settlement';body.append(h);let any=false;for(let i=0;i<game.players.length;i++)for(let j=i+1;j<game.players.length;j++){const a=game.players[i],b=game.players[j];const chips=(goodCount[a]-goodCount[b])*.5;const skins=(game.skins[a]-game.skins[b])*game.skinValue;const net=chips+skins;if(Math.abs(net)<.001)continue;any=true;addLine(body,(net>0?b+' owes '+a:a+' owes '+b)+' '+money(Math.abs(net))+' (good chips and skins netted).');}if(!any)addLine(body,'No pairwise payments.');addLine(body,'Bad-chip pot contributions: '+game.players.map(p=>p+' '+money(badCount[p])).join('; ')+'.');show('final');}
+function reset(){if(confirm('End this game and start over? Current results will be lost.')){game=null;show('welcome');}}
+$('endGame').onclick=reset;$('summaryEnd').onclick=reset;$('newGame').onclick=()=>{game=null;show('welcome');};
+
+// Voice selects the same per-hole controls used by manual entry; Finish Hole commits changes.
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+const voiceButton=$('voiceButton');
+const voiceStatus=$('voiceStatus');
+const voiceHeard=$('voiceHeard');
+function normalized(text){return text.toLowerCase().replace(/[^a-z0-9]/g,'');}
+// Recognize only explicit, unambiguous Safari transcription variants.
+// In particular, Sand (bad) and Sandy (good) must never be conflated.
+const CHIP_ALIASES={
+  bertie:'Birdie',part:'Par',closesttopin:'Closest to the Pin',
+  gear:'GIR',girl:'GIR',grr:'GIR',
+  nomolly:'No Mully',nonomolly:'No Mully',
+  friendshipputt:'Fringe Putt',longdrivetrip:'Long Drive',
+  doublegirl:'Double GIR',doublegear:'Double GIR',threebarsinarow:'3 Pars in a Row',
+  '3barsinarow':'3 Pars in a Row',holein1:'Hole in One',
+  wholeinone:'Hole in One',wholein1:'Hole in One',holdingone:'Hole in One',holdout:'Hole Out',
+  '+3':'Plus 3','+4':'Plus 4','+5':'Plus 5','+6':'Plus 6',
+  '3':'Plus 3','4':'Plus 4','5':'Plus 5','6':'Plus 6'
+};
+function normalizedChipSpeech(text){
+  let words=text.toLowerCase().trim();
+  // Keep the leading plus sign before removing punctuation.
+  const plus=words.match(/^\s*\+\s*([3456])\s*$/);
+  if(plus)return normalized(CHIP_ALIASES['+'+plus[1]]);
+  words=words.replace(/[^a-z0-9]+/g,' ').trim();
+  const numbers={one:'1',three:'3',four:'4',five:'5',six:'6'};
+  words=words.replace(/\b(one|three|four|five|six)\b/g,word=>numbers[word]);
+  words=words.replace(/\b(putt|put|pot|putts|puts|pots)\b/g,'putt');
+  const key=normalized(words);
+  return normalized(CHIP_ALIASES[key]||key);
+}
+// Accept multiple chips and multiple players in a single spoken command.
+// Parse and validate everything before changing any dropdowns.
+function voiceChip(text){
+  const names=game.players.slice().sort((a,b)=>b.length-a.length)
+    .map(p=>p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  const playerPattern=new RegExp('(?:^|[.,;]\\s*|\\s+)(('+names.join('|')+')\\s+(?:gets?|got|has|earned?)\\s+)','gi');
+  const matches=Array.from(text.matchAll(playerPattern));
+  if(!matches.length){voiceStatus.textContent='Could not understand the command. Try “Chris gets Birdie and Par.”';return;}
+  if(text.slice(0,matches[0].index).trim()){
+    voiceStatus.textContent='Could not understand the beginning of the command. No chips selected.';return;
+  }
+  const selections=[];
+  const errors=[];
+  matches.forEach((match,i)=>{
+    const player=game.players.find(p=>normalized(p)===normalized(match[2]));
+    const start=match.index+match[0].length;
+    const end=i+1<matches.length?matches[i+1].index:text.length;
+    const spoken=text.slice(start,end).replace(/^[\s,.;]+|[\s,.;!?]+$/g,'').trim();
+    const chips=spoken.split(/\s*(?:,|\band\b|&)\s*/i)
+      .map(part=>part.replace(/^the\s+/i,'').replace(/\s+chips?$/i,'').trim()).filter(Boolean);
+    if(!player||!chips.length){errors.push('Missing player or chip name.');return;}
+    chips.forEach(part=>{
+      const key=normalizedChipSpeech(part);
+      const good=GOOD.find(c=>normalizedChipSpeech(c)===key);
+      const bad=BAD.find(c=>normalizedChipSpeech(c)===key);
+      if(!good&&!bad){errors.push('Chip not found: '+part);return;}
+      const chip=good||bad;
+      const kind=good?'good':'bad';
+      const select=Array.from(document.querySelectorAll('[data-chip]'))
+        .find(el=>el.dataset.chip===chip&&el.dataset.kind===kind);
+      if(!select){errors.push('Chip selection unavailable: '+chip);return;}
+      if(selections.some(item=>item.select===select)){
+        errors.push('Chip mentioned more than once: '+chip);return;
+      }
+      selections.push({select,player,chip});
+    });
+  });
+  if(errors.length){voiceStatus.textContent=errors.join('; ')+'. No chips selected; try again or enter manually.';return;}
+  selections.forEach(item=>item.select.value=item.player);
+  voiceStatus.textContent=selections.map(item=>item.player+' → '+item.chip).join('; ')+'. Review below and tap Finish Hole to save.';
+}
+if(!SpeechRecognition){voiceButton.disabled=true;voiceStatus.textContent='Speech recognition is not available in this browser. Manual entry still works.';}
+else{
+  const recognition=new SpeechRecognition();
+  recognition.lang='en-US';recognition.interimResults=false;recognition.maxAlternatives=1;
+  voiceButton.addEventListener('click',()=>{
+    if(!game)return;
+    try{recognition.start();voiceStatus.textContent='Listening…';voiceButton.disabled=true;}
+    catch(e){voiceStatus.textContent='Could not start microphone: '+e.message;}
+  });
+  recognition.onresult=e=>{
+    const transcript=e.results[0][0].transcript;
+    voiceHeard.textContent=transcript;
+    if(!$('round').classList.contains('hidden'))voiceChip(transcript);
+  };
+  recognition.onerror=e=>{voiceStatus.textContent='Speech recognition error: '+e.error+'. You can still select chips manually.';};
+  recognition.onend=()=>{voiceButton.disabled=false;if(voiceStatus.textContent==='Listening…')voiceStatus.textContent='No speech detected. Tap to try again.';};
+}
+</script></body></html>
