@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Golf Chips & Skins — Round Test</title>
+<style>body{font:16px Arial,sans-serif;background:#f4f6f2;color:#182018;margin:0}header{background:#173b25;color:white;padding:18px}main{max-width:700px;margin:auto;padding:16px}.card{background:white;border-radius:14px;padding:18px;margin-bottom:14px}label{display:block;margin:12px 0 5px;font-weight:bold}input,select,textarea,button{font:inherit;box-sizing:border-box;max-width:100%}input,select,textarea{padding:9px;width:100%}button{padding:11px;margin:6px 6px 6px 0;border:0;border-radius:9px;background:#206b3d;color:white}button.secondary{background:#59645d}button:disabled{opacity:.45}.voicebox{border:2px solid #c5dfcb;border-radius:12px;padding:12px;margin:14px 0;background:#f4faf5}.voicebox p{overflow-wrap:anywhere}.muted{color:#58645c}.chiprow{display:flex;gap:8px;align-items:center;margin:7px 0}.chiprow select{flex:1;min-width:0}.chiprow span{flex:1}.small{font-size:14px}.hidden{display:none}hr{border:0;border-top:1px solid #ddd;margin:18px 0}
+/* Larger, high-contrast on-course controls. */
+body{font-size:19px;line-height:1.45}main{max-width:760px;padding:12px}header{padding:16px}header h2{font-size:1.5rem;margin:0 0 5px}.card{padding:16px;margin-bottom:12px}h2{font-size:1.45rem}h3{font-size:1.25rem}button,input,select,textarea{font-size:20px;min-height:50px}button{padding:12px 16px}input,select,textarea{padding:11px}.small{font-size:16px}.muted{color:#435248}.chiprow{display:block;padding:12px;margin:9px 0;border:2px solid #cbd8ce;border-radius:12px;background:#f9fcf9}.chiprow .chipname{display:block;font-size:21px;font-weight:700}.chiprow .holder{display:block;font-size:19px;font-weight:700;color:#164d2c;margin:3px 0 9px}.chiprow .holder.unheld{color:#4c5b50}.chiprow select{display:block;width:100%;min-height:54px}.skin-entry{background:#edf6ef;border:2px solid #9bbca4;border-radius:12px;padding:14px;margin:12px 0}.skin-entry label{margin-top:0;font-size:21px}.skin-entry select{width:100%}#roundTotals{overflow-x:auto}#roundTotals table{font-size:17px}#roundTotals th,#roundTotals td{white-space:nowrap}.hidden{display:none}
+/* v8: course-first layout, large legible chip cards and controls. */
+#round{padding:12px 14px}#roundTitle{font-size:clamp(34px,9vw,46px);line-height:1.1;margin:0 0 5px}#roundInfo{font-size:17px;margin:0 0 8px;line-height:1.35}#round h3{font-size:28px;margin:16px 0 8px}#round .skin-entry{margin:8px 0 12px;padding:14px}#round .skin-entry label{font-size:26px}#round .skin-entry .small{font-size:18px;margin:8px 0 0}#round select{font-size:25px;min-height:68px;padding:14px 12px;background:#fff;color:#15251b;border:2px solid #82998a;border-radius:12px}#round .chiprow{padding:15px;margin:10px 0;border-width:2px;background:#fff}#round .chiprow .chipname{font-size:29px;line-height:1.2}#round .chiprow .holder{font-size:24px;line-height:1.25;margin:8px 0 12px;color:#115b2e}#round .chiprow .holder.unheld{color:#414d44}#round button{font-size:23px;min-height:62px}#round #finishHole{display:block;width:100%;font-size:28px;font-weight:700;margin:20px 0 12px}.round-summary{border:2px solid #b9cbbd;border-radius:12px;padding:12px;margin:15px 0}.round-summary summary{font-size:22px;font-weight:700;cursor:pointer}.round-summary[open] #roundTotals{margin-top:12px}#roundTotals table{font-size:18px}
+
+/* Larger type and tap targets on the post-hole summary screen. */
+#summary{padding:18px 16px}#summaryTitle{font-size:clamp(30px,8vw,42px);line-height:1.18;margin:0 0 18px}#summaryBody{font-size:24px;line-height:1.45}#summaryBody p{margin:10px 0 20px;overflow-wrap:anywhere}#summaryBody h3,#summary>h3{font-size:27px;line-height:1.25;margin:22px 0 10px}#holeTotals{overflow-x:auto}#holeTotals table{width:100%;font-size:21px;line-height:1.3}#holeTotals th,#holeTotals td{padding:12px 5px!important;vertical-align:top}#summary button{font-size:23px;min-height:60px}#summary #nextHole{display:block;width:100%;font-size:27px;font-weight:700;margin:22px 0 14px}
+</style></head>
+<body><header><h2>Golf Chips & Skins</h2><div>Shared round test · Supabase connection required</div></header><main>
+<section class="card" id="welcome"><h2>Golf Chips & Skins</h2><button id="create">Create Game</button><button id="welcomeRounds" class="secondary">View rounds</button></section>
+<section class="card" id="connection"><h2>Connect &amp; join</h2><p id="connectionStatus" role="status">Connecting…</p><label for="viewerName">Your name</label><input id="viewerName" placeholder="Chris"><button id="refreshGames">Refresh rounds</button><h3>Live and saved rounds</h3><div id="gameList"></div><button id="toggleHidden" class="secondary" type="button">Show hidden rounds</button><div class="voicebox"><h3>Round manager (Chris only)</h3><p class="small">Sign in with the separate golf-app email and password you created in Supabase. Other players do not need to sign in.</p><div id="managerLogin"><label for="managerEmail">Email</label><input id="managerEmail" type="email" autocomplete="username"><label for="managerPassword">Password</label><input id="managerPassword" type="password" autocomplete="current-password"><button id="managerSignIn" type="button">Manager sign in</button></div><button id="managerSignOut" type="button" class="secondary hidden">Manager sign out</button><p id="managerStatus" class="small" role="status">Not signed in as manager.</p></div><button id="moreFinished" type="button" class="secondary hidden">Show more finished rounds</button><button id="moreHidden" type="button" class="secondary hidden">Show more hidden rounds</button><div id="hiddenGameList" class="hidden"></div><p class="muted small">To watch a round, choose View. Only its original scorekeeper can edit it on the device where they created it. Player emails are not shown in shared history.</p></section><section class="card hidden" id="setup"><h2>New Game</h2><label for="players">Players (one per line)</label><textarea id="players" rows="4">Chris
+Mike
+Dave</textarea><label for="roundDate">Round date</label><input id="roundDate" type="date"><label for="nine">Which nine?</label><select id="nine"><option value="front">Front Nine (1–9)</option><option value="back">Back Nine (10–18)</option></select><label for="skinValue">Skin value</label><select id="skinValue"><option value="0.25">$0.25</option><option value="0.50">$0.50</option><option value="0.10">$0.10</option><option value="1.00">$1.00</option></select><label for="carryover">Skin carryover</label><select id="carryover"><option value="on">On</option><option value="off">Off</option></select><label for="emails">Player emails (optional; one per line)</label><textarea id="emails" rows="3"></textarea><p class="muted small">Emails are optional and stored privately; the Email Results button opens your email app for you to send.</p><button id="start">Start Round</button></section>
+<section class="card hidden" id="round"><h2 id="roundTitle"></h2><p id="roundInfo"></p><div class="skin-entry"><label for="skinWinner">Skin winner for this hole</label><select id="skinWinner"></select><p class="muted small">Choose “Tie / no winner” if the hole is tied.</p></div><div class="voicebox hidden" aria-hidden="true"><h3>🎤 Voice chips and skins</h3><p class="small">Say “Chris gets Birdie and Par” for chips, “Chris wins the skin” for a winner, or “Tie” for no winner. Review selections, then tap Finish Hole to save them.</p><button type="button" id="voiceButton">Start talking</button><p id="voiceStatus" role="status">Ready.</p><p class="small">Heard: <span id="voiceHeard">Nothing yet.</span></p></div><h3>Good chips</h3><div id="goodRows"></div><h3>Bad chips</h3><div id="badRows"></div><button id="finishHole">Finish Hole</button><details class="round-summary"><summary>Current Round Summary</summary><div id="roundTotals"></div></details><button id="backToRounds" class="secondary">Round list</button><button class="secondary" id="endGame">End game / start over</button></section>
+<section class="card hidden" id="summary"><h2 id="summaryTitle"></h2><div id="summaryBody"></div><h3>Current Round Summary</h3><div id="holeTotals"></div><button id="nextHole">Next Hole</button><button id="summaryBack" class="secondary">Round list</button><button class="secondary" id="summaryEnd">End game / start over</button></section>
+<section class="card hidden" id="live"><h2>Live Round — Spectator View</h2><p id="liveStatus" class="muted small" role="status">Checking for updates…</p><div id="liveBody"></div><button id="liveRefresh">Refresh live results</button><button id="liveBack" class="secondary">Round list</button></section>
+<section class="card hidden" id="final"><h2>Final Settlement</h2><div id="finalBody"></div><button id="saveRound">Save round online</button><button id="emailRound">Email results</button><button id="newGame">Start New Game</button></section>
+</main><script>
+'use strict';
+const GOOD=['Par','GIR','Long Drive','1 Putt','Long Putt','Birdie','Closest to the Pin','3 Pars in a Row','Chip In','Fringe Putt','Eagle','Sandy','Double GIR','3 Birdies in a Row','Albatross','Hole in One','No Mully','Net Winner','Hole Out'];
+const BAD=['3 Putt','Sand','Double Sand','Beer','Lost Ball','Out of Bounds','Water','Double Water','Lady','Double Lady','Tree','Plus 3','Plus 4','Plus 5','Plus 6','4 Putt','5 Putt','6 Putt'];
+// Keep the original database keys for compatibility with v3 and older saved rounds.
+const CHIP_LABELS={'Sandy':'Sandy Chip','No Mully':'No Mully Chip','Hole in One':'Hole In One','Net Winner':'Net Winner Chip'};
+const chipLabel=chip=>CHIP_LABELS[chip]||chip; // Hole Out remains at the end because it exists in v3 but was absent from the requested order.
+const $=id=>document.getElementById(id);let game=null;let sharedId=null;let readOnly=false;let playerEmails=[];
+function show(id){['welcome','setup','round','summary','live','final'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('connection').classList.toggle('hidden',id!=='welcome');window.scrollTo(0,0);}
+function option(value,label){const o=document.createElement('option');o.value=value;o.textContent=label;return o;}
+function todayLocal(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+$('create').onclick=()=>{$('roundDate').value||=todayLocal();show('setup');};
+$('start').onclick=async()=>{const players=$('players').value.split(/\n|,/).map(s=>s.trim()).filter(Boolean);if(players.length<2){alert('Please enter at least two players.');return;}if(new Set(players.map(s=>s.toLowerCase())).size!==players.length){alert('Each player must have a different name.');return;}if(!$('roundDate').value){alert('Please select a date.');return;}const emails=$('emails').value.split(/\n|,/).map(s=>s.trim());if(emails.some(e=>e&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))){alert('Please check the email addresses or leave them blank.');return;}game={players,date:$('roundDate').value,nine:$('nine').value,skinValue:Number($('skinValue').value),carry:$('carryover').value==='on',records:[],good:{},bad:{},skins:{},pending:0};GOOD.forEach(c=>game.good[c]=null);BAD.forEach(c=>game.bad[c]=null);players.forEach(p=>game.skins[p]=0);playerEmails=emails;readOnly=false;const ok=await createSharedGame();if(ok)renderHole();};
+function chipRows(container,chips,kind){
+ container.replaceChildren();
+ chips.forEach(chip=>{
+  const row=document.createElement('div');row.className='chiprow';
+  const label=document.createElement('span');label.className='chipname';label.textContent=chipLabel(chip);
+  const holder=document.createElement('span');holder.className='holder';
+  const current=(kind==='good'?game.good:game.bad)[chip];
+  holder.textContent=current?'Current holder: '+current:'Current holder: No one yet';
+  if(!current)holder.classList.add('unheld');
+  const sel=document.createElement('select');sel.dataset.chip=chip;sel.dataset.kind=kind;
+  sel.setAttribute('aria-label',chipLabel(chip)+' — select new holder');
+  sel.append(option('','No change — '+(current||'unclaimed')));
+  game.players.forEach(p=>sel.append(option(p,p)));
+  row.append(label,holder,sel);container.append(row);
+ });
+}
+function renderTotals(target){const counts={};game.players.forEach(p=>counts[p]={good:0,bad:0,skins:game.skins[p]});Object.values(game.good).forEach(p=>{if(p)counts[p].good++;});Object.values(game.bad).forEach(p=>{if(p)counts[p].bad++;});const table=document.createElement("table");table.style.cssText="width:100%;border-collapse:collapse;text-align:left";const head=document.createElement("tr");["Player","Good chips","Bad chips","Skins"].forEach(t=>{const th=document.createElement("th");th.textContent=t;th.style.cssText="padding:8px 4px;border-bottom:2px solid #ccc";head.append(th);});table.append(head);game.players.forEach(p=>{const tr=document.createElement("tr");[p,counts[p].good,counts[p].bad,counts[p].skins].forEach(v=>{const td=document.createElement("td");td.textContent=v;td.style.cssText="padding:8px 4px;border-bottom:1px solid #ddd";tr.append(td);});table.append(tr);});$(target).replaceChildren(table);}
+function renderHole(){const hole=(game.nine==='front'?1:10)+game.records.length;$('roundTitle').textContent='Hole '+hole;$('finishHole').textContent='Finish Hole '+hole;$('roundInfo').textContent=game.date+' · '+(game.nine==='front'?'Front Nine':'Back Nine')+' · Skin carryover: '+(game.carry?'ON':'OFF')+' · '+game.records.length+' holes completed';$('skinWinner').replaceChildren(option('','Tie / no winner'));game.players.forEach(p=>$('skinWinner').append(option(p,p)));chipRows($('goodRows'),GOOD,'good');chipRows($('badRows'),BAD,'bad');renderTotals('roundTotals');$('voiceHeard').textContent='Nothing yet.';$('voiceStatus').textContent='Ready.';$('finishHole').disabled=readOnly;$('skinWinner').disabled=readOnly;document.querySelectorAll('[data-chip]').forEach(el=>el.disabled=readOnly);$('voiceButton').disabled=readOnly||!SpeechRecognition;show('round');}
+$('finishHole').onclick=async()=>{if(readOnly)return;const hole=(game.nine==='front'?1:10)+game.records.length;const winner=$('skinWinner').value;const changedGood=[],changedBad=[];document.querySelectorAll('[data-chip]').forEach(sel=>{if(!sel.value)return;const chip=sel.dataset.chip;const owners=sel.dataset.kind==='good'?game.good:game.bad;const previous=owners[chip];owners[chip]=sel.value;(sel.dataset.kind==='good'?changedGood:changedBad).push(chipLabel(chip)+': '+(previous&&previous!==sel.value?previous+' → ':'')+sel.value);});let skinsWon=0;if(winner){skinsWon=game.pending+1;game.skins[winner]+=skinsWon;game.pending=0;}else if(game.carry){game.pending++;}const rec={hole,winner,skinsWon,changedGood,changedBad};game.records.push(rec);if(!await syncHole(rec))return;$('summaryTitle').textContent='Hole '+hole+' Summary · Carryover '+(game.carry?'ON':'OFF');const body=$('summaryBody');body.replaceChildren();const p=document.createElement('p');p.textContent=winner?winner+' won '+skinsWon+' skin(s).':game.carry?'Tie — '+game.pending+' skin(s) carry forward.':'Tie — no skin awarded.';body.append(p);[['Good chips',changedGood],['Bad chips',changedBad]].forEach(([label,items])=>{const h=document.createElement('h3');h.textContent=label;body.append(h);const el=document.createElement('p');el.textContent=items.join('; ')||'No changes';body.append(el);});renderTotals('holeTotals');$('nextHole').textContent=game.records.length===9?'See Final Settlement':'Next Hole';show('summary');};
+$('nextHole').onclick=()=>game.records.length===9?renderFinal():renderHole();
+function money(n){return '$'+n.toFixed(2);}
+function addLine(parent,text){const p=document.createElement('p');p.textContent=text;parent.append(p);}
+function renderFinal(){const body=$('finalBody');body.replaceChildren();addLine(body,game.date+' · '+(game.nine==='front'?'Front Nine':'Back Nine'));const goodCount={},badCount={};game.players.forEach(p=>{goodCount[p]=0;badCount[p]=0;});Object.values(game.good).forEach(p=>{if(p)goodCount[p]++;});Object.values(game.bad).forEach(p=>{if(p)badCount[p]++;});game.players.forEach(p=>addLine(body,p+': '+goodCount[p]+' good chips, '+badCount[p]+' bad chips, '+game.skins[p]+' skins'));addLine(body,'Community pot: '+money(Object.values(badCount).reduce((a,b)=>a+b,0))+' (each bad chip counts as $1.00).');if(game.pending)addLine(body,game.pending+' carried skin(s) remained unawarded.');const h=document.createElement('h3');h.textContent='Pairwise settlement';body.append(h);let any=false;for(let i=0;i<game.players.length;i++)for(let j=i+1;j<game.players.length;j++){const a=game.players[i],b=game.players[j];const chips=(goodCount[a]-goodCount[b])*.5;const skins=(game.skins[a]-game.skins[b])*game.skinValue;const net=chips+skins;if(Math.abs(net)<.001)continue;any=true;addLine(body,(net>0?b+' owes '+a:a+' owes '+b)+' '+money(Math.abs(net))+' (good chips and skins netted).');}if(!any)addLine(body,'No pairwise payments.');addLine(body,'Bad-chip pot contributions: '+game.players.map(p=>p+' '+money(badCount[p])).join('; ')+'.');$('saveRound').disabled=readOnly;show('final');}
+function reset(){if(confirm('End this game and start over? Current results will be lost.')){game=null;show('welcome');}}
+$('endGame').onclick=reset;$('summaryEnd').onclick=reset;$('newGame').onclick=()=>{game=null;sharedId=null;show('welcome');refreshGames();};
+
+// Voice selects the same per-hole controls used by manual entry; Finish Hole commits changes.
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+const voiceButton=$('voiceButton');
+const voiceStatus=$('voiceStatus');
+const voiceHeard=$('voiceHeard');
+function normalized(text){return text.toLowerCase().replace(/[^a-z0-9]/g,'');}
+// Recognize only explicit, unambiguous Safari transcription variants.
+// In particular, Sand (bad) and Sandy (good) must never be conflated.
+const CHIP_ALIASES={
+  bertie:'Birdie',part:'Par',closesttopin:'Closest to the Pin',
+  gear:'GIR',girl:'GIR',grr:'GIR',
+  nomolly:'No Mully',nonomolly:'No Mully',
+  friendshipputt:'Fringe Putt',longdrivetrip:'Long Drive',
+  doublegirl:'Double GIR',doublegear:'Double GIR',threebarsinarow:'3 Pars in a Row',
+  '3barsinarow':'3 Pars in a Row',holein1:'Hole in One',
+  wholeinone:'Hole in One',wholein1:'Hole in One',holdingone:'Hole in One',holdout:'Hole Out',
+  '+3':'Plus 3','+4':'Plus 4','+5':'Plus 5','+6':'Plus 6',
+  '3':'Plus 3','4':'Plus 4','5':'Plus 5','6':'Plus 6'
+};
+function normalizedChipSpeech(text){
+  let words=text.toLowerCase().trim();
+  // Keep the leading plus sign before removing punctuation.
+  const plus=words.match(/^\s*\+\s*([3456])\s*$/);
+  if(plus)return normalized(CHIP_ALIASES['+'+plus[1]]);
+  words=words.replace(/[^a-z0-9]+/g,' ').trim();
+  const numbers={one:'1',three:'3',four:'4',five:'5',six:'6'};
+  words=words.replace(/\b(one|three|four|five|six)\b/g,word=>numbers[word]);
+  words=words.replace(/\b(putt|put|pot|putts|puts|pots)\b/g,'putt');
+  const key=normalized(words);
+  return normalized(CHIP_ALIASES[key]||key);
+}
+// Skin commands change only the current hole's winner dropdown; Finish Hole saves it.
+// Require an explicit skin/win phrase so chip commands such as "Chris gets Birdie" stay unchanged.
+function voiceSkin(text){
+  const phrase=text.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  if(/^(?:tie|thai|ty|tied|no winner|ty no winner|thai no winner|tie no winner|no skin|skin tied|tie hole|tied hole|the hole is tied|the skin is tied)$/.test(phrase)){
+    $('skinWinner').value='';
+    voiceStatus.textContent='Skin: Tie / no winner selected. Review and tap Finish Hole to save.';
+    return true;
+  }
+  const winnerPhrase=phrase.match(/^(.+?) (?:wins?|won|gets?|got|has|earned?) (?:the |a )?skins?(?: for (?:this |the )?hole)?$/);
+  if(!winnerPhrase)return false;
+  const player=game.players.find(p=>normalized(p)===normalized(winnerPhrase[1]));
+  if(!player){voiceStatus.textContent='Skin winner not found: '+winnerPhrase[1]+'. No changes made.';return true;}
+  $('skinWinner').value=player;
+  voiceStatus.textContent='Skin winner: '+player+'. Review and tap Finish Hole to save.';
+  return true;
+}
+// Accept multiple chips and multiple players in a single spoken command.
+// Parse and validate everything before changing any dropdowns.
+function voiceChip(text){
+  const names=game.players.slice().sort((a,b)=>b.length-a.length)
+    .map(p=>p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  const playerPattern=new RegExp('(?:^|[.,;]\\s*|\\s+)(('+names.join('|')+')\\s+(?:gets?|got|has|earned?)\\s+)','gi');
+  const matches=Array.from(text.matchAll(playerPattern));
+  if(!matches.length){voiceStatus.textContent='Could not understand the command. Try “Chris gets Birdie and Par.”';return;}
+  if(text.slice(0,matches[0].index).trim()){
+    voiceStatus.textContent='Could not understand the beginning of the command. No chips selected.';return;
+  }
+  const selections=[];
+  const errors=[];
+  matches.forEach((match,i)=>{
+    const player=game.players.find(p=>normalized(p)===normalized(match[2]));
+    const start=match.index+match[0].length;
+    const end=i+1<matches.length?matches[i+1].index:text.length;
+    const spoken=text.slice(start,end).replace(/^[\s,.;]+|[\s,.;!?]+$/g,'').trim();
+    const chips=spoken.split(/\s*(?:,|\band\b|&)\s*/i)
+      .map(part=>part.replace(/^the\s+/i,'').replace(/\s+chips?$/i,'').trim()).filter(Boolean);
+    if(!player||!chips.length){errors.push('Missing player or chip name.');return;}
+    chips.forEach(part=>{
+      const key=normalizedChipSpeech(part);
+      const good=GOOD.find(c=>normalizedChipSpeech(c)===key);
+      const bad=BAD.find(c=>normalizedChipSpeech(c)===key||normalizedChipSpeech(chipLabel(c))===key);
+      if(!good&&!bad){errors.push('Chip not found: '+part);return;}
+      const chip=good||bad;
+      const kind=good?'good':'bad';
+      const select=Array.from(document.querySelectorAll('[data-chip]'))
+        .find(el=>el.dataset.chip===chip&&el.dataset.kind===kind);
+      if(!select){errors.push('Chip selection unavailable: '+chip);return;}
+      if(selections.some(item=>item.select===select)){
+        errors.push('Chip mentioned more than once: '+chip);return;
+      }
+      selections.push({select,player,chip});
+    });
+  });
+  if(errors.length){voiceStatus.textContent=errors.join('; ')+'. No chips selected; try again or enter manually.';return;}
+  selections.forEach(item=>item.select.value=item.player);
+  voiceStatus.textContent=selections.map(item=>item.player+' → '+item.chip).join('; ')+'. Review below and tap Finish Hole to save.';
+}
+if(!SpeechRecognition){voiceButton.disabled=true;voiceStatus.textContent='Speech recognition is not available in this browser. Manual entry still works.';}
+else{
+  const recognition=new SpeechRecognition();
+  recognition.lang='en-US';recognition.interimResults=false;recognition.maxAlternatives=1;
+  voiceButton.addEventListener('click',()=>{
+    if(!game)return;
+    try{recognition.start();voiceStatus.textContent='Listening…';voiceButton.disabled=true;}
+    catch(e){voiceStatus.textContent='Could not start microphone: '+e.message;}
+  });
+  recognition.onresult=e=>{
+    const transcript=e.results[0][0].transcript;
+    voiceHeard.textContent=transcript;
+    if(!$('round').classList.contains('hidden')&&!voiceSkin(transcript))voiceChip(transcript);
+  };
+  recognition.onerror=e=>{voiceStatus.textContent='Speech recognition error: '+e.error+'. You can still select chips manually.';};
+  recognition.onend=()=>{voiceButton.disabled=false;if(voiceStatus.textContent==='Listening…')voiceStatus.textContent='No speech detected. Tap to try again.';};
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* Shared beta: only public/publishable credentials are embedded. No secret key. */
+const SUPABASE_URL='https://bhscidfuhoxafusumrbq.supabase.co';
+const SUPABASE_KEY='sb_publishable_g9ij06XjO2Ngn-wc805WFA_Joam1nFh';
+let db=null, authUser=null, viewingId=null, lastVersion='', busy=false;
+let managerDb=null, managerUser=null, finishedLimit=100, hiddenLimit=100;
+let livePollBusy=false;
+const notice=(message)=>{$('connectionStatus').textContent=message;};
+const esc=(value)=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const gameCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[v%32]).join('');
+async function initialize(){
+ try{
+  if(!window.supabase)throw Error('Supabase library did not load. Check your internet connection.');
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'golf-round-player-session'}});
+   managerDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'golf-round-manager-session'}});
+   const managerSession=await managerDb.auth.getSession();
+   if(managerSession.error)throw managerSession.error;
+   if(managerSession.data.session){const verified=await managerDb.auth.getUser();if(!verified.error&&verified.data.user&&!verified.data.user.is_anonymous)managerUser=verified.data.user;}
+   updateManagerUI();
+  let {data:{session},error}=await db.auth.getSession();if(error)throw error;
+  if(!session){const result=await db.auth.signInAnonymously();if(result.error)throw result.error;session=result.data.session;}
+  authUser=session?.user;if(!authUser)throw Error('Anonymous sign-in failed.');
+  notice('Connected. Enter your name to view rounds or create a game.');
+  await refreshGames();
+ }catch(e){notice('Connection failed: '+e.message);}
+}
+async function createSharedGame(){
+ if(!db||!authUser){alert('Connect to Supabase first.');return false;}
+ try{
+  $('start').disabled=true;
+  const payload={code:gameCode(),round_date:game.date,nine:game.nine,skin_value:game.skinValue,carryover:game.carry,current_hole:game.nine==='front'?1:10,status:'active',hidden:false,scorekeeper_id:authUser.id};
+  const result=await db.from('games').insert(payload).select('id').single();if(result.error)throw result.error;
+  sharedId=result.data.id;
+  const rows=game.players.map((name,i)=>({game_id:sharedId,name,email:playerEmails[i]||null}));
+  const added=await db.from('players').insert(rows);if(added.error)throw added.error;
+  await refreshGames();return true;
+ }catch(e){alert('Could not start shared game: '+e.message+'\nIf a game was created, it may appear in the round list.');await refreshGames();return false;}
+ finally{$('start').disabled=false;}
+}
+async function syncHole(rec){
+ if(!db||!sharedId){alert('No online game is connected.');return false;}
+ try{
+  $('finishHole').disabled=true;
+  const row={game_id:sharedId,hole_number:rec.hole,skin_winner:rec.winner||null,skin_count:rec.skinsWon,carry_skins:game.pending,good_owners:game.good,bad_owners:game.bad,ready_players:game.players};
+  const saved=await db.from('hole_records').insert(row);if(saved.error)throw saved.error;
+  const completed=game.records.length===9;
+  const update=await db.from('games').update({current_hole:rec.hole,status:completed?'finished':'active'}).eq('id',sharedId).eq('scorekeeper_id',authUser.id);
+  if(update.error)throw update.error;return true;
+ }catch(e){game.records.pop();alert('Hole was not fully saved online: '+e.message+'\nCheck the round list before retrying to avoid duplicates.');return false;}
+ finally{$('finishHole').disabled=false;}
+}
+let showHiddenRounds=false;
+function updateManagerUI(){
+ $('managerLogin').classList.toggle('hidden',!!managerUser);
+ $('managerSignOut').classList.toggle('hidden',!managerUser);
+ $('managerStatus').textContent=managerUser?'Manager signed in. You can hide or restore older rounds.':'Not signed in as manager.';
+}
+$('managerSignIn').onclick=async()=>{
+ if(!managerDb)return;
+ const email=$('managerEmail').value.trim(),password=$('managerPassword').value;
+ if(!email||!password){$('managerStatus').textContent='Enter your email and password.';return;}
+ $('managerSignIn').disabled=true;
+ try{
+  const {data,error}=await managerDb.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  managerUser=data.user;
+  $('managerPassword').value='';
+  updateManagerUI();await refreshGames();
+ }catch(e){$('managerStatus').textContent='Sign-in failed: '+e.message;}
+ finally{$('managerSignIn').disabled=false;}
+};
+$('managerSignOut').onclick=async()=>{
+ const {error}=await managerDb.auth.signOut();
+ if(error){$('managerStatus').textContent='Sign-out failed: '+error.message;return;}
+ managerUser=null;updateManagerUI();await refreshGames();
+};
+$('toggleHidden').onclick=()=>{showHiddenRounds=!showHiddenRounds;$('toggleHidden').textContent=showHiddenRounds?'Hide hidden rounds':'Show hidden rounds';refreshGames();};
+$('moreFinished').onclick=()=>{finishedLimit+=100;refreshGames();};
+$('moreHidden').onclick=()=>{hiddenLimit+=100;refreshGames();};
+async function setRoundHidden(g,hidden){
+ const own=g.scorekeeper_id===authUser?.id;
+ if(!own&&!managerUser)return;
+ if(!confirm(hidden?'Remove this round from everyone’s list? Scores will be kept and you can restore it later.':'Restore this round to everyone’s list?'))return;
+ let error=null,confirmed=false;
+ if(managerUser){
+  const result=await managerDb.rpc('manage_round_visibility',{round_id:g.id,make_hidden:hidden});
+  error=result.error;confirmed=result.data===true;
+ }else{
+  const result=await db.from('games').update({hidden}).eq('id',g.id).eq('scorekeeper_id',authUser.id).select('id,hidden').single();
+  error=result.error;confirmed=result.data?.hidden===hidden;
+ }
+ if(error){alert('Could not change this round: '+error.message);return;}
+ if(!confirmed){alert('The change was not confirmed. Check manager permission or refresh and try again.');return;}
+ await refreshGames();
+}
+function appendRound(parent,g,hidden){
+ const p=document.createElement('p');
+ const btn=document.createElement('button');btn.textContent='View';btn.onclick=()=>openSharedGame(g.id);
+ p.append(document.createTextNode(`${g.round_date} · ${g.nine==='front'?'Front':'Back'} 9 · ${g.status} · ${g.code} `),btn);
+ if(g.scorekeeper_id===authUser?.id||managerUser){const change=document.createElement('button');change.className='secondary';change.textContent=hidden?'Restore to everyone’s list':'Remove from everyone’s list';change.onclick=()=>setRoundHidden(g,!hidden);p.append(change);}
+ parent.append(p);
+}
+async function refreshGames(){
+ if(!db)return;
+ const columns='id,code,round_date,nine,status,current_hole,scorekeeper_id,skin_value,carryover,hidden';
+ const requests=[
+  db.from('games').select(columns).eq('status','active').eq('hidden',false).order('created_at',{ascending:false}).limit(3),
+  db.from('games').select(columns).eq('status','finished').eq('hidden',false).order('created_at',{ascending:false}).limit(finishedLimit)
+ ];
+ if(showHiddenRounds)requests.push(db.from('games').select(columns).eq('hidden',true).order('created_at',{ascending:false}).limit(hiddenLimit));
+ const results=await Promise.all(requests);
+ const failure=results.find(r=>r.error);
+ if(failure){notice('Cannot load rounds: '+failure.error.message);return;}
+ const list=$('gameList');list.replaceChildren();
+ const sections=[['Active rounds (up to 3)',results[0].data||[]],['Finished rounds',results[1].data||[]]];
+ if(sections.every(([,rounds])=>!rounds.length))list.textContent='No visible rounds yet. Create a game to get started.';
+ for(const [heading,rounds] of sections){
+  if(!rounds.length)continue;
+  const title=document.createElement('h4');title.textContent=heading;list.append(title);
+  for(const g of rounds)appendRound(list,g,false);
+ }
+ $('moreFinished').classList.toggle('hidden',(results[1].data||[]).length<finishedLimit);
+ const hiddenList=$('hiddenGameList');hiddenList.replaceChildren();hiddenList.classList.toggle('hidden',!showHiddenRounds);
+ $('moreHidden').classList.toggle('hidden',!showHiddenRounds||(results[2]?.data||[]).length<hiddenLimit);
+ if(showHiddenRounds){const rounds=results[2].data||[];const heading=document.createElement('h4');heading.textContent='Hidden rounds';hiddenList.append(heading);if(!rounds.length)addLine(hiddenList,'No hidden rounds.');for(const g of rounds)appendRound(hiddenList,g,true);}
+}
+async function openSharedGame(id, automatic=false){
+ if(!db)return;
+ if(automatic && (livePollBusy || viewingId!==id || $('live').classList.contains('hidden')))return;
+ if(automatic)livePollBusy=true;
+ else viewingId=id;
+ try{
+ const {data:g,error}=await db.from('games').select('id,round_date,nine,skin_value,carryover,current_hole,status,scorekeeper_id').eq('id',id).single();
+ if(error){if(automatic)$('liveStatus').textContent='Update failed: '+error.message;else alert(error.message);return;}
+ const {data:holes,error:holeError}=await db.from('hole_records').select('hole_number,skin_winner,skin_count,carry_skins,good_owners,bad_owners,ready_players').eq('game_id',id).order('hole_number');
+ if(holeError){if(automatic)$('liveStatus').textContent='Update failed: '+holeError.message;else alert(holeError.message);return;}
+ // Players' names are included in hole snapshots. The players table has no public SELECT policy, protecting emails.
+ const names=holes.find(h=>Array.isArray(h.ready_players)&&h.ready_players.length)?.ready_players||[];
+ if(!names.length){
+  if(automatic && viewingId!==id)return;
+  $('liveBody').replaceChildren();addLine($('liveBody'),g.round_date+' · '+(g.nine==='front'?'Front':'Back')+' Nine · '+g.status);addLine($('liveBody'),'No completed holes yet. Player names and scores will appear after the first hole is saved.');show('live');$('liveStatus').textContent='Checked '+new Date().toLocaleTimeString()+' · Waiting for first hole';return;
+ }
+ const current={players:names,date:g.round_date,nine:g.nine,skinValue:Number(g.skin_value),carry:g.carryover,records:[],good:{},bad:{},skins:{},pending:0};
+ GOOD.forEach(c=>current.good[c]=null);BAD.forEach(c=>current.bad[c]=null);names.forEach(n=>current.skins[n]=0);
+ for(const h of holes){current.good=h.good_owners||current.good;current.bad=h.bad_owners||current.bad;current.pending=h.carry_skins||0;if(h.skin_winner&&current.skins[h.skin_winner]!==undefined)current.skins[h.skin_winner]+=h.skin_count||0;current.records.push({hole:h.hole_number,winner:h.skin_winner,skinsWon:h.skin_count||0});}
+ if(automatic && viewingId!==id)return;
+ const version=JSON.stringify({g,holes});
+ if(automatic && version===lastVersion){$('liveStatus').textContent='Checked '+new Date().toLocaleTimeString()+' · No new results';return;}
+ game=current;sharedId=id;readOnly=g.scorekeeper_id!==authUser?.id;
+ lastVersion=version;
+ if(g.status==='finished'||holes.length>=9){renderFinal();}
+ else if(readOnly){renderLive(holes);$('liveStatus').textContent='Updated '+new Date().toLocaleTimeString()+' · '+holes.length+' holes completed';}
+ else renderHole();
+ }catch(e){if(automatic)$('liveStatus').textContent='Update failed: '+e.message;else alert('Could not open round: '+e.message);}
+ finally{if(automatic)livePollBusy=false;}
+}
+function renderLive(holes){
+ const body=$('liveBody');body.replaceChildren();
+ addLine(body,game.date+' · '+(game.nine==='front'?'Front':'Back')+' Nine · '+holes.length+' of 9 holes completed');
+ const totals=document.createElement('div');totals.id='liveTotals';body.append(totals);renderTotals('liveTotals');
+ const heading=document.createElement('h3');heading.textContent='Completed holes';body.append(heading);
+ for(const h of holes){
+  const detail=document.createElement('div');detail.className='card';detail.style.background='#f4faf5';
+  addLine(detail,'Hole '+h.hole_number+' · '+(h.skin_winner?h.skin_winner+' won '+(h.skin_count||0)+' skin(s)':'Tie / no winner'));
+  const good=h.good_owners||{},bad=h.bad_owners||{};
+  const goodText=Object.entries(good).filter(([,owner])=>owner).map(([chip,owner])=>chipLabel(chip)+': '+owner);
+  const badText=Object.entries(bad).filter(([,owner])=>owner).map(([chip,owner])=>chipLabel(chip)+': '+owner);
+  addLine(detail,'Good chips held: '+(goodText.join('; ')||'None'));
+  addLine(detail,'Bad chips held: '+(badText.join('; ')||'None'));
+  body.append(detail);
+ }
+ addLine(body,'Viewing only. The scorekeeper enters and saves results on their own device.');
+ show('live');
+}
+$('liveRefresh').onclick=()=>{if(viewingId)openSharedGame(viewingId);};
+$('liveBack').onclick=()=>{viewingId=null;show('welcome');refreshGames();};
+$('refreshGames').onclick=refreshGames;
+$('welcomeRounds').onclick=()=>{show('welcome');refreshGames();};
+$('backToRounds').onclick=()=>{viewingId=null;show('welcome');refreshGames();};
+$('summaryBack').onclick=()=>{viewingId=null;show('welcome');refreshGames();};
+$('saveRound').onclick=async()=>{if(!game||!sharedId)return;const {error}=await db.from('games').update({status:'finished'}).eq('id',sharedId).eq('scorekeeper_id',authUser.id);if(error)alert('Could not save: '+error.message);else alert('Round saved online. Everyone can view it in Round History.');await refreshGames();};
+$('emailRound').onclick=()=>{
+ if(!game)return;
+ const good={},bad={};game.players.forEach(p=>{good[p]=0;bad[p]=0;});Object.values(game.good).forEach(p=>{if(p in good)good[p]++;});Object.values(game.bad).forEach(p=>{if(p in bad)bad[p]++;});
+ const lines=[`Golf Chips & Skins — ${game.date} (${game.nine} nine)`,...game.players.map(p=>`${p}: ${good[p]} good chips, ${bad[p]} bad chips, ${game.skins[p]} skins`),'Bourbon fund: '+money(Object.values(bad).reduce((a,b)=>a+b,0)),'Pairwise settlement:'];
+ for(let i=0;i<game.players.length;i++)for(let j=i+1;j<game.players.length;j++){const a=game.players[i],b=game.players[j],net=(good[a]-good[b])*.5+(game.skins[a]-game.skins[b])*game.skinValue;if(Math.abs(net)>.001)lines.push(`${net>0?b:a} owes ${net>0?a:b} ${money(Math.abs(net))}`);}
+ const recipients=playerEmails.filter(x=>x&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)).join(',');
+ location.href='mailto:'+recipients+'?subject='+encodeURIComponent('Golf round results '+game.date)+'&body='+encodeURIComponent(lines.join('\n'));
+};
+// Poll the open live round independently of the round list. Keep the status visible.
+setInterval(()=>{if(db&&viewingId&&!$('live').classList.contains('hidden'))openSharedGame(viewingId,true);},10000);
+// Refresh the round list only when it is visible; a list error cannot block live updates.
+setInterval(()=>{if(db&&!document.hidden&&$('live').classList.contains('hidden'))refreshGames();},30000);
+initialize();
+</script>
+</body></html>
